@@ -1,0 +1,35 @@
+name: ASITHA-MD V5 Loop Runner
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js v20
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run ASITHA-MD V5 (Auto-Restart Loop)
+        run: |
+          echo "Starting ASITHA-MD V5 bot in auto-restart mode..."
+          timeout 18000 bash -c 'while true; do npm start || echo "ASITHA-MD V5 crashed, restarting..."; sleep 2; done'
+
+      - name: Re-Trigger Workflow
+        if: always()
+        run: |
+          echo "Re-running workflow to keep alive..."
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.PAT_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/asitha-md-v5.yml/dispatches \
+            -d '{"ref":"main"}'
